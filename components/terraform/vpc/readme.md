@@ -43,5 +43,5 @@ components:
 
 Deploy with:
 ```bash
-atmos terraform apply vpc -s dev-us-west1
+atmos terraform apply vpc -s dev
 ```

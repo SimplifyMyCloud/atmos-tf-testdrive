@@ -33,13 +33,18 @@ All resources configured with verbose logging for observability.
 
 ### Deploy
 
+**Important**: All commands must be run from the project root directory.
+
 ```bash
+# Navigate to project root
+cd atmos-tf-testdrive
+
 # Deploy infrastructure in order
-atmos terraform apply gcp-project -s dev-us-west1
-atmos terraform apply vpc -s dev-us-west1
-atmos terraform apply subnet -s dev-us-west1
-atmos terraform apply firewall -s dev-us-west1
-atmos terraform apply vm -s dev-us-west1
+atmos terraform apply gcp-project -s dev
+atmos terraform apply vpc -s dev
+atmos terraform apply subnet -s dev
+atmos terraform apply firewall -s dev
+atmos terraform apply vm -s dev
 
 # Get the VM's external IP
 gcloud compute instances describe smc-atmos-vm-00 \
@@ -53,11 +58,11 @@ gcloud compute instances describe smc-atmos-vm-00 \
 
 ```bash
 # Destroy in reverse order
-atmos terraform destroy vm -s dev-us-west1
-atmos terraform destroy firewall -s dev-us-west1
-atmos terraform destroy subnet -s dev-us-west1
-atmos terraform destroy vpc -s dev-us-west1
-atmos terraform destroy gcp-project -s dev-us-west1
+atmos terraform destroy vm -s dev
+atmos terraform destroy firewall -s dev
+atmos terraform destroy subnet -s dev
+atmos terraform destroy vpc -s dev
+atmos terraform destroy gcp-project -s dev
 ```
 
 ## Project Structure

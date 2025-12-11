@@ -9,6 +9,19 @@ Before deploying, ensure:
 2. GCP authentication is configured via ADC
 3. You have necessary permissions in your GCP organization
 
+## Important: Working Directory
+
+**All commands in this guide must be run from the project root directory.**
+
+```bash
+# Navigate to the project root
+cd /path/to/atmos-tf-testdrive
+
+# Verify you're in the correct directory
+ls atmos.yaml  # This file should exist
+pwd            # Should show .../atmos-tf-testdrive
+```
+
 ## Understanding Atmos Commands
 
 Atmos uses a simple command structure:
@@ -21,7 +34,7 @@ Where:
 - `<component>`: The component name (from components/terraform/)
 - `<stack>`: The stack name (from stacks/ directory structure)
 
-For this project, our stack is: `dev-us-west1`
+For this project, our stack is: `dev`
 
 ## Deployment Order
 
@@ -41,10 +54,10 @@ Components must be deployed in order due to dependencies:
 
 ```bash
 # Plan
-atmos terraform plan gcp-project -s dev-us-west1
+atmos terraform plan gcp-project -s dev
 
 # Apply
-atmos terraform apply gcp-project -s dev-us-west1
+atmos terraform apply gcp-project -s dev
 ```
 
 This creates the project `smc-atmos-test-00` and enables required APIs.
@@ -55,10 +68,10 @@ This creates the project `smc-atmos-test-00` and enables required APIs.
 
 ```bash
 # Plan
-atmos terraform plan vpc -s dev-us-west1
+atmos terraform plan vpc -s dev
 
 # Apply
-atmos terraform apply vpc -s dev-us-west1
+atmos terraform apply vpc -s dev
 ```
 
 This creates the VPC network `smc-atmos-vpc-00`.
@@ -67,10 +80,10 @@ This creates the VPC network `smc-atmos-vpc-00`.
 
 ```bash
 # Plan
-atmos terraform plan subnet -s dev-us-west1
+atmos terraform plan subnet -s dev
 
 # Apply
-atmos terraform apply subnet -s dev-us-west1
+atmos terraform apply subnet -s dev
 ```
 
 This creates the subnet `smc-atmos-subnet-00` in us-west1 with flow logs enabled.
@@ -79,10 +92,10 @@ This creates the subnet `smc-atmos-subnet-00` in us-west1 with flow logs enabled
 
 ```bash
 # Plan
-atmos terraform plan firewall -s dev-us-west1
+atmos terraform plan firewall -s dev
 
 # Apply
-atmos terraform apply firewall -s dev-us-west1
+atmos terraform apply firewall -s dev
 ```
 
 This creates:
@@ -93,10 +106,10 @@ This creates:
 
 ```bash
 # Plan
-atmos terraform plan vm -s dev-us-west1
+atmos terraform plan vm -s dev
 
 # Apply
-atmos terraform apply vm -s dev-us-west1
+atmos terraform apply vm -s dev
 ```
 
 This creates the VM instance with the Go web application.
@@ -170,12 +183,12 @@ sudo tail -f /var/log/webapp.log
 
 ### View Component Configuration
 ```bash
-atmos describe component <component-name> -s dev-us-west1
+atmos describe component <component-name> -s dev
 ```
 
 Example:
 ```bash
-atmos describe component vm -s dev-us-west1
+atmos describe component vm -s dev
 ```
 
 ### List All Stacks
@@ -195,12 +208,12 @@ atmos validate stacks
 
 ### Show Terraform Outputs
 ```bash
-atmos terraform output <component> -s dev-us-west1
+atmos terraform output <component> -s dev
 ```
 
 Example:
 ```bash
-atmos terraform output vm -s dev-us-west1
+atmos terraform output vm -s dev
 ```
 
 ## Destroying Infrastructure
@@ -209,19 +222,19 @@ To tear down the infrastructure, reverse the deployment order:
 
 ```bash
 # 1. Destroy VM
-atmos terraform destroy vm -s dev-us-west1
+atmos terraform destroy vm -s dev
 
 # 2. Destroy firewall rules
-atmos terraform destroy firewall -s dev-us-west1
+atmos terraform destroy firewall -s dev
 
 # 3. Destroy subnet
-atmos terraform destroy subnet -s dev-us-west1
+atmos terraform destroy subnet -s dev
 
 # 4. Destroy VPC
-atmos terraform destroy vpc -s dev-us-west1
+atmos terraform destroy vpc -s dev
 
 # 5. Destroy project (optional - this deletes everything)
-atmos terraform destroy gcp-project -s dev-us-west1
+atmos terraform destroy gcp-project -s dev
 ```
 
 **Warning**: Destroying the project will delete all resources within it.

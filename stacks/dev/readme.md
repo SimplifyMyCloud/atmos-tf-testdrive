@@ -26,11 +26,11 @@ Development environment deployed to **us-west1** (Oregon) region.
 
 Deploy all components in order:
 ```bash
-atmos terraform apply gcp-project -s dev-us-west1
-atmos terraform apply vpc -s dev-us-west1
-atmos terraform apply subnet -s dev-us-west1
-atmos terraform apply firewall -s dev-us-west1
-atmos terraform apply vm -s dev-us-west1
+atmos terraform apply gcp-project -s dev
+atmos terraform apply vpc -s dev
+atmos terraform apply subnet -s dev
+atmos terraform apply firewall -s dev
+atmos terraform apply vm -s dev
 ```
 
 Or use the Makefile:
@@ -42,7 +42,7 @@ make apply-all
 
 See the full configuration for a component:
 ```bash
-atmos describe component vpc -s dev-us-west1
+atmos describe component vpc -s dev
 ```
 
 ## Adding New Regions

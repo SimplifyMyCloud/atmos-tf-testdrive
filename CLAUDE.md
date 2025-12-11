@@ -22,21 +22,30 @@ The infrastructure consists of:
 - Firewall rules (HTTP from internet, SSH via IAP only)
 - GCE VM (e2-micro, Debian 12) running a Go web application
 
+## Working Directory
+
+**All commands must be run from the project root directory** (`atmos-tf-testdrive/`).
+
+```bash
+cd /path/to/atmos-tf-testdrive
+ls atmos.yaml  # Verify you're in the right place
+```
+
 ## Key Commands
 
 ### Atmos Commands
 ```bash
 # Deploy a component
-atmos terraform apply <component> -s dev-us-west1
+atmos terraform apply <component> -s dev
 
 # Plan changes
-atmos terraform plan <component> -s dev-us-west1
+atmos terraform plan <component> -s dev
 
 # Destroy a component
-atmos terraform destroy <component> -s dev-us-west1
+atmos terraform destroy <component> -s dev
 
 # View component configuration
-atmos describe component <component> -s dev-us-west1
+atmos describe component <component> -s dev
 
 # List components
 atmos list components
@@ -101,7 +110,7 @@ atmos.yaml             - Atmos configuration
 - Reference components and provide variable values
 - Define WHERE and HOW to deploy
 - YAML format for readability
-- Stack name pattern: `dev-us-west1` (environment-region)
+- Stack name pattern: `dev` (environment-region)
 
 ### Key Benefit
 Components are reusable code, stacks are configuration. Change stack values to deploy same components to different environments/regions.

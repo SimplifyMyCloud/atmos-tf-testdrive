@@ -4,6 +4,11 @@
 # Import base configurations (if any)
 import: []
 
+# Stack-level variables for Atmos
+vars:
+  environment: dev
+  region: us-west1
+
 # Component configurations
 components:
   terraform:

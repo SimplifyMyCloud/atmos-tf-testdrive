@@ -27,8 +27,8 @@ resource "google_compute_instance" "vm" {
   }
 
   network_interface {
-    network    = var.network_name
-    subnetwork = var.subnet_name
+    subnetwork         = var.subnet_name
+    subnetwork_project = var.project_id
 
     # Assign external IP for internet access
     access_config {
@@ -36,9 +36,10 @@ resource "google_compute_instance" "vm" {
     }
   }
 
-  # Metadata startup script
+  # Metadata startup script and OS Login
   metadata = {
-    startup-script = var.startup_script
+    startup-script   = var.startup_script
+    enable-oslogin   = "TRUE"
   }
 
   # Service account with necessary scopes

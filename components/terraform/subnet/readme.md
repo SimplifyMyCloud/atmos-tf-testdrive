@@ -52,5 +52,5 @@ components:
 
 Deploy with:
 ```bash
-atmos terraform apply subnet -s dev-us-west1
+atmos terraform apply subnet -s dev
 ```

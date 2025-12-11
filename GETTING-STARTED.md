@@ -37,6 +37,18 @@ Before deploying, ensure you have:
 - [ ] GCP authentication set up: `gcloud auth application-default login`
 - [ ] Required GCP permissions (Project Creator, Billing Account User)
 
+## Important: Working Directory
+
+**All commands in this guide must be run from the project root directory** (`atmos-tf-testdrive/`).
+
+```bash
+# Navigate to the project root
+cd /path/to/atmos-tf-testdrive
+
+# Verify you're in the right place
+ls atmos.yaml  # Should exist
+```
+
 ## Quick Deploy (Using Makefile)
 
 The easiest way to deploy everything:
@@ -62,21 +74,21 @@ If you prefer to deploy step-by-step:
 
 ```bash
 # 1. Create GCP Project
-atmos terraform apply gcp-project -s dev-us-west1
+atmos terraform apply gcp-project -s dev
 
 # Wait 30-60 seconds for APIs to enable
 
 # 2. Create VPC
-atmos terraform apply vpc -s dev-us-west1
+atmos terraform apply vpc -s dev
 
 # 3. Create Subnet
-atmos terraform apply subnet -s dev-us-west1
+atmos terraform apply subnet -s dev
 
 # 4. Create Firewall Rules
-atmos terraform apply firewall -s dev-us-west1
+atmos terraform apply firewall -s dev
 
 # 5. Create VM
-atmos terraform apply vm -s dev-us-west1
+atmos terraform apply vm -s dev
 ```
 
 ## Verify Deployment
@@ -175,7 +187,7 @@ vm:
 
 Then redeploy:
 ```bash
-atmos terraform apply vm -s dev-us-west1
+atmos terraform apply vm -s dev
 ```
 
 ### Change Subnet CIDR

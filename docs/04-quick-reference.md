@@ -1,23 +1,31 @@
 # Quick Reference Guide
 
+## Working Directory
+
+**All commands must be run from the project root directory** (`atmos-tf-testdrive/`).
+
+```bash
+cd /path/to/atmos-tf-testdrive
+```
+
 ## Common Commands
 
 ### Deploy All Infrastructure (in order)
 ```bash
-atmos terraform apply gcp-project -s dev-us-west1
-atmos terraform apply vpc -s dev-us-west1
-atmos terraform apply subnet -s dev-us-west1
-atmos terraform apply firewall -s dev-us-west1
-atmos terraform apply vm -s dev-us-west1
+atmos terraform apply gcp-project -s dev
+atmos terraform apply vpc -s dev
+atmos terraform apply subnet -s dev
+atmos terraform apply firewall -s dev
+atmos terraform apply vm -s dev
 ```
 
 ### Destroy All Infrastructure (in reverse order)
 ```bash
-atmos terraform destroy vm -s dev-us-west1
-atmos terraform destroy firewall -s dev-us-west1
-atmos terraform destroy subnet -s dev-us-west1
-atmos terraform destroy vpc -s dev-us-west1
-atmos terraform destroy gcp-project -s dev-us-west1
+atmos terraform destroy vm -s dev
+atmos terraform destroy firewall -s dev
+atmos terraform destroy subnet -s dev
+atmos terraform destroy vpc -s dev
+atmos terraform destroy gcp-project -s dev
 ```
 
 ### Get VM External IP

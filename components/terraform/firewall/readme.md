@@ -56,7 +56,7 @@ components:
 
 Deploy with:
 ```bash
-atmos terraform apply firewall -s dev-us-west1
+atmos terraform apply firewall -s dev
 ```
 
 ## Security Notes

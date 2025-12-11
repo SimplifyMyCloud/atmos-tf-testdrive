@@ -8,7 +8,11 @@
       "Bash(done)",
       "Bash(tree:*)",
       "Bash(for dir in components/terraform/*/)",
-      "Bash(do echo \"$dir\")"
+      "Bash(do echo \"$dir\")",
+      "Bash(atmos list:*)",
+      "Bash(atmos describe stacks:*)",
+      "Bash(find:*)",
+      "WebFetch(domain:35.212.176.84)"
     ],
     "deny": [],
     "ask": []

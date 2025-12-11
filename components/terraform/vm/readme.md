@@ -70,7 +70,7 @@ components:
 
 Deploy with:
 ```bash
-atmos terraform apply vm -s dev-us-west1
+atmos terraform apply vm -s dev
 ```
 
 ## Notes

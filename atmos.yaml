@@ -13,7 +13,8 @@ stacks:
     - "**/*"
   excluded_paths:
     - "**/_*"
-  name_pattern: "{tenant}-{environment}-{stage}"
+  # Simplified name pattern for test drive
+  name_pattern: "{environment}-{region}"
 
 # Schemas for validation (optional)
 schemas:

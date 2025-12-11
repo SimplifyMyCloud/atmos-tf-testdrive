@@ -3,7 +3,7 @@
 
 .PHONY: help plan-all apply-all destroy-all plan apply destroy status
 
-STACK := dev-us-west1
+STACK := dev
 
 help:
 	@echo "Atmos + Terraform GCP Test Drive - Available Commands:"

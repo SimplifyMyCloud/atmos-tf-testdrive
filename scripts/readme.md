@@ -70,6 +70,6 @@ sudo systemctl status webapp.service
 To modify the startup script:
 1. Edit `scripts/vm-startup.sh` (for reference)
 2. Update the `startup_script` variable in `stacks/dev/us-west1.yaml`
-3. Redeploy the VM: `atmos terraform apply vm -s dev-us-west1`
+3. Redeploy the VM: `atmos terraform apply vm -s dev`
 
 **Note:** The script in `stacks/dev/us-west1.yaml` is the authoritative version that gets deployed. The file in `scripts/` is for reference and testing.

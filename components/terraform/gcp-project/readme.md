@@ -41,5 +41,5 @@ components:
 
 Deploy with:
 ```bash
-atmos terraform apply gcp-project -s dev-us-west1
+atmos terraform apply gcp-project -s dev
 ```

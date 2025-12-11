@@ -46,13 +46,13 @@ atmos terraform apply <component> -s <stack-name>
 
 Example:
 ```bash
-atmos terraform apply vpc -s dev-us-west1
+atmos terraform apply vpc -s dev
 ```
 
 ## Stack Naming Convention
 
 Stack names follow the pattern: `{environment}-{region}`
-- `dev-us-west1` - Development in Oregon
+- `dev` - Development in Oregon
 - `prod-us-east1` - Production in South Carolina
 - `staging-europe-west1` - Staging in Belgium
 
