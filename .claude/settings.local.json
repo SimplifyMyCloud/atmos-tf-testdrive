@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(while read dir)",
+      "Bash(do echo \"$dir:\")",
+      "Bash(ls:*)",
+      "Bash(done)",
+      "Bash(tree:*)",
+      "Bash(for dir in components/terraform/*/)",
+      "Bash(do echo \"$dir\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

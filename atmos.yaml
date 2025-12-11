@@ -1,0 +1,32 @@
+# Atmos CLI configuration
+# https://atmos.tools/cli/configuration/
+
+# Base path for components
+components:
+  terraform:
+    base_path: "components/terraform"
+
+# Stacks configuration
+stacks:
+  base_path: "stacks"
+  included_paths:
+    - "**/*"
+  excluded_paths:
+    - "**/_*"
+  name_pattern: "{tenant}-{environment}-{stage}"
+
+# Schemas for validation (optional)
+schemas:
+  jsonschema:
+    base_path: "stacks/schemas"
+
+# Workflows (optional, for common operations)
+workflows:
+  base_path: "stacks/workflows"
+
+# Logs configuration
+logs:
+  level: Info
+
+# Integrations and other settings
+integrations: {}
