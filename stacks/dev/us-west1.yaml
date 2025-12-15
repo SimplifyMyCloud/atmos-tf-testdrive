@@ -1,0 +1,446 @@
+# Atmos Stack Configuration for Dev Environment - us-west1 (Oregon)
+# This file orchestrates all components for the development environment
+
+# Import base configurations (if any)
+import: []
+
+# Stack-level variables for Atmos
+vars:
+  environment: dev
+  region: us-west1
+
+# Component configurations
+components:
+  terraform:
+    # GCP Project Component
+    gcp-project:
+      metadata:
+        component: gcp-project
+        inherits: []
+      vars:
+        project_name: "SMC Atmos Test"
+        project_id: "smc-atmos-test-00"
+        org_id: "933250405420"
+        billing_account: "000000-000002-6D3BF8"
+        labels:
+          environment: "dev"
+          managed_by: "terraform"
+          project: "atmos-testdrive"
+        enabled_apis:
+          - "compute.googleapis.com"
+          - "cloudresourcemanager.googleapis.com"
+          - "logging.googleapis.com"
+          - "monitoring.googleapis.com"
+          - "iap.googleapis.com"
+
+    # VPC Network Component
+    vpc:
+      metadata:
+        component: vpc
+        inherits: []
+      vars:
+        project_id: "smc-atmos-test-00"
+        network_name: "smc-atmos-vpc-00"
+        routing_mode: "REGIONAL"
+        description: "VPC network for Atmos test drive"
+
+    # Subnet Component
+    subnet:
+      metadata:
+        component: subnet
+        inherits: []
+      vars:
+        project_id: "smc-atmos-test-00"
+        subnet_name: "smc-atmos-subnet-00"
+        region: "us-west1"
+        network_name: "smc-atmos-vpc-00"
+        ip_cidr_range: "10.0.0.0/24"
+        private_ip_google_access: true
+        description: "Subnet for Atmos test drive in us-west1"
+        # Verbose logging configuration
+        flow_logs_interval: "INTERVAL_5_SEC"
+        flow_logs_sampling: 1.0
+        flow_logs_metadata: "INCLUDE_ALL_METADATA"
+
+    # Firewall Rules Component
+    firewall:
+      metadata:
+        component: firewall
+        inherits: []
+      vars:
+        project_id: "smc-atmos-test-00"
+        network_name: "smc-atmos-vpc-00"
+        name_prefix: "smc-atmos"
+
+    # VM Instance Component
+    vm:
+      metadata:
+        component: vm
+        inherits: []
+      vars:
+        project_id: "smc-atmos-test-00"
+        instance_name: "smc-atmos-vm-00"
+        zone: "us-west1-a"
+        machine_type: "e2-micro"
+        network_name: "smc-atmos-vpc-00"
+        subnet_name: "smc-atmos-subnet-00"
+        network_tags:
+          - "http-server"
+        boot_disk_image: "debian-cloud/debian-12"
+        boot_disk_size: 10
+        boot_disk_type: "pd-standard"
+        startup_script: |
+          #!/bin/bash
+          # Go web server startup script
+          exec > /var/log/startup-script.log 2>&1
+          set -x
+
+          echo "Starting setup at $(date)"
+
+          # Update package list and install wget
+          apt-get update
+          apt-get install -y wget
+
+          # Download and install Go
+          echo "Installing Go..."
+          cd /tmp
+          wget -q https://go.dev/dl/go1.21.5.linux-amd64.tar.gz
+          rm -rf /usr/local/go
+          tar -C /usr/local -xzf go1.21.5.linux-amd64.tar.gz
+
+          # Set up Go environment
+          export PATH=$PATH:/usr/local/go/bin
+          export HOME=/root
+          export GOCACHE=/tmp/go-cache
+          mkdir -p /tmp/go-cache
+
+          # Create application directory
+          mkdir -p /opt/webapp
+          cd /opt/webapp
+
+          # Create Go web server with metadata display
+          cat > main.go << 'GOEOF'
+          package main
+
+          import (
+              "encoding/json"
+              "fmt"
+              "io"
+              "log"
+              "net/http"
+              "strings"
+          )
+
+          // Metadata represents VM metadata
+          type Metadata struct {
+              InstanceName   string
+              InstanceID     string
+              MachineType    string
+              Zone           string
+              ProjectID      string
+              InternalIP     string
+              ExternalIP     string
+              Hostname       string
+          }
+
+          // fetchMetadata retrieves a value from GCP metadata server
+          func fetchMetadata(path string) (string, error) {
+              url := "http://metadata.google.internal/computeMetadata/v1/" + path
+              client := &http.Client{}
+              req, err := http.NewRequest("GET", url, nil)
+              if err != nil {
+                  return "", err
+              }
+              req.Header.Add("Metadata-Flavor", "Google")
+
+              resp, err := client.Do(req)
+              if err != nil {
+                  return "", err
+              }
+              defer resp.Body.Close()
+
+              body, err := io.ReadAll(resp.Body)
+              if err != nil {
+                  return "", err
+              }
+
+              return string(body), nil
+          }
+
+          // extractLast extracts the last part after the last slash
+          func extractLast(s string) string {
+              parts := strings.Split(s, "/")
+              return parts[len(parts)-1]
+          }
+
+          // getMetadata retrieves all VM metadata
+          func getMetadata() (*Metadata, error) {
+              md := &Metadata{}
+              var err error
+
+              md.InstanceName, _ = fetchMetadata("instance/name")
+              md.InstanceID, _ = fetchMetadata("instance/id")
+
+              machineType, _ := fetchMetadata("instance/machine-type")
+              md.MachineType = extractLast(machineType)
+
+              zone, _ := fetchMetadata("instance/zone")
+              md.Zone = extractLast(zone)
+
+              md.ProjectID, _ = fetchMetadata("project/project-id")
+              md.InternalIP, _ = fetchMetadata("instance/network-interfaces/0/ip")
+              md.ExternalIP, _ = fetchMetadata("instance/network-interfaces/0/access-configs/0/external-ip")
+              md.Hostname, _ = fetchMetadata("instance/hostname")
+
+              return md, err
+          }
+
+          // homeHandler serves the main page
+          func homeHandler(w http.ResponseWriter, r *http.Request) {
+              md, err := getMetadata()
+              if err != nil {
+                  http.Error(w, "Error fetching metadata", http.StatusInternalServerError)
+                  return
+              }
+
+              html := fmt.Sprintf(`<!DOCTYPE html>
+          <html>
+          <head>
+              <title>GCE VM Metadata - Atmos + Terraform</title>
+              <style>
+                  * { margin: 0; padding: 0; box-sizing: border-box; }
+                  body {
+                      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                      background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%);
+                      min-height: 100vh;
+                      padding: 40px 20px;
+                  }
+                  .container {
+                      max-width: 900px;
+                      margin: 0 auto;
+                      background: white;
+                      border-radius: 20px;
+                      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                      overflow: hidden;
+                  }
+                  .header {
+                      background: linear-gradient(135deg, #4285f4 0%%, #34a853 100%%);
+                      color: white;
+                      padding: 40px;
+                      text-align: center;
+                  }
+                  .header h1 {
+                      font-size: 2.5em;
+                      margin-bottom: 10px;
+                      font-weight: 600;
+                  }
+                  .header p {
+                      font-size: 1.1em;
+                      opacity: 0.95;
+                  }
+                  .content {
+                      padding: 40px;
+                  }
+                  .metadata-grid {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                      gap: 20px;
+                      margin-top: 20px;
+                  }
+                  .metadata-item {
+                      background: #f8f9fa;
+                      padding: 25px;
+                      border-radius: 12px;
+                      border-left: 4px solid #4285f4;
+                      transition: transform 0.2s, box-shadow 0.2s;
+                  }
+                  .metadata-item:hover {
+                      transform: translateY(-5px);
+                      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+                  }
+                  .metadata-label {
+                      font-size: 0.85em;
+                      color: #666;
+                      text-transform: uppercase;
+                      letter-spacing: 1px;
+                      margin-bottom: 8px;
+                      font-weight: 600;
+                  }
+                  .metadata-value {
+                      font-size: 1.2em;
+                      color: #333;
+                      font-weight: 500;
+                      word-break: break-all;
+                  }
+                  .success-badge {
+                      display: inline-block;
+                      background: #34a853;
+                      color: white;
+                      padding: 8px 20px;
+                      border-radius: 20px;
+                      font-size: 0.9em;
+                      margin-bottom: 20px;
+                      font-weight: 500;
+                  }
+                  .footer {
+                      text-align: center;
+                      padding: 30px;
+                      background: #f8f9fa;
+                      color: #666;
+                      font-size: 0.9em;
+                  }
+                  .api-link {
+                      margin-top: 30px;
+                      padding: 20px;
+                      background: #e8f0fe;
+                      border-radius: 8px;
+                      border-left: 4px solid #1a73e8;
+                  }
+                  .api-link p {
+                      color: #1a73e8;
+                      margin-bottom: 10px;
+                      font-weight: 500;
+                  }
+                  .api-link a {
+                      color: #1a73e8;
+                      text-decoration: none;
+                      font-family: monospace;
+                      font-size: 0.95em;
+                  }
+                  .api-link a:hover {
+                      text-decoration: underline;
+                  }
+              </style>
+          </head>
+          <body>
+              <div class="container">
+                  <div class="header">
+                      <h1>🎉 Success!</h1>
+                      <p>Atmos + Terraform + Go on GCP</p>
+                  </div>
+                  <div class="content">
+                      <div class="success-badge">✓ Infrastructure Deployed Successfully</div>
+                      <h2 style="margin-bottom: 20px; color: #333;">GCE VM Metadata</h2>
+                      <div class="metadata-grid">
+                          <div class="metadata-item">
+                              <div class="metadata-label">Instance Name</div>
+                              <div class="metadata-value">%s</div>
+                          </div>
+                          <div class="metadata-item">
+                              <div class="metadata-label">Instance ID</div>
+                              <div class="metadata-value">%s</div>
+                          </div>
+                          <div class="metadata-item">
+                              <div class="metadata-label">Machine Type</div>
+                              <div class="metadata-value">%s</div>
+                          </div>
+                          <div class="metadata-item">
+                              <div class="metadata-label">Zone</div>
+                              <div class="metadata-value">%s</div>
+                          </div>
+                          <div class="metadata-item">
+                              <div class="metadata-label">Project ID</div>
+                              <div class="metadata-value">%s</div>
+                          </div>
+                          <div class="metadata-item">
+                              <div class="metadata-label">Internal IP</div>
+                              <div class="metadata-value">%s</div>
+                          </div>
+                          <div class="metadata-item">
+                              <div class="metadata-label">External IP</div>
+                              <div class="metadata-value">%s</div>
+                          </div>
+                          <div class="metadata-item">
+                              <div class="metadata-label">Hostname</div>
+                              <div class="metadata-value">%s</div>
+                          </div>
+                      </div>
+                      <div class="api-link">
+                          <p>📡 JSON API Endpoint:</p>
+                          <a href="/api/metadata" target="_blank">/api/metadata</a>
+                      </div>
+                  </div>
+                  <div class="footer">
+                      <p>Managed by Atmos + Terraform | Powered by Go</p>
+                  </div>
+              </div>
+          </body>
+          </html>`,
+                  md.InstanceName, md.InstanceID, md.MachineType, md.Zone,
+                  md.ProjectID, md.InternalIP, md.ExternalIP, md.Hostname)
+
+              w.Header().Set("Content-Type", "text/html; charset=utf-8")
+              fmt.Fprint(w, html)
+          }
+
+          // apiHandler serves metadata as JSON
+          func apiHandler(w http.ResponseWriter, r *http.Request) {
+              md, err := getMetadata()
+              if err != nil {
+                  http.Error(w, "Error fetching metadata", http.StatusInternalServerError)
+                  return
+              }
+
+              w.Header().Set("Content-Type", "application/json")
+              json.NewEncoder(w).Encode(md)
+          }
+
+          // healthHandler serves health check
+          func healthHandler(w http.ResponseWriter, r *http.Request) {
+              w.Header().Set("Content-Type", "application/json")
+              fmt.Fprint(w, `{"status":"healthy"}`)
+          }
+
+          func main() {
+              http.HandleFunc("/", homeHandler)
+              http.HandleFunc("/api/metadata", apiHandler)
+              http.HandleFunc("/health", healthHandler)
+
+              log.Println("Starting Go web server on 0.0.0.0:80")
+              log.Println("Endpoints: / | /api/metadata | /health")
+
+              if err := http.ListenAndServe("0.0.0.0:80", nil); err != nil {
+                  log.Fatal(err)
+              }
+          }
+          GOEOF
+
+          # Build the application
+          echo "Building Go application..."
+          /usr/local/go/bin/go build -o webapp main.go
+
+          # Create systemd service
+          cat > /etc/systemd/system/webapp.service << 'SERVICEEOF'
+          [Unit]
+          Description=Go Web Application
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=root
+          WorkingDirectory=/opt/webapp
+          ExecStart=/opt/webapp/webapp
+          Restart=always
+          RestartSec=5
+          StandardOutput=append:/var/log/webapp.log
+          StandardError=append:/var/log/webapp-error.log
+
+          [Install]
+          WantedBy=multi-user.target
+          SERVICEEOF
+
+          # Enable and start the service
+          systemctl daemon-reload
+          systemctl enable webapp.service
+          systemctl start webapp.service
+
+          echo "Setup complete at $(date)"
+          echo "Service status:"
+          systemctl status webapp.service --no-pager
+        service_account_email: ""
+        service_account_scopes:
+          - "cloud-platform"
+        labels:
+          environment: "dev"
+          managed_by: "terraform"
+          application: "metadata-webapp"
